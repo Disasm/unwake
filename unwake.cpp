@@ -26,7 +26,7 @@ bool lid_opened()
 
 bool screen_locked()
 {
-    int rc = system("ps aux | grep mate-screensaver-dialog | grep -v grep &> /dev/null");
+    int rc = system("DISPLAY=:0.0 dbus-send --print-reply --dest=org.mate.ScreenSaver / org.mate.ScreenSaver.GetActive | grep boolean | grep true &> /dev/null");
     return rc == 0;
 }
 
@@ -48,14 +48,14 @@ int main()
     {
         sleep(1);
         time_t newTime = time(0);
-        if ((newTime - oldTime) > 2)
+        if ((newTime - oldTime) > 3)
         {
             // Wakeup
             enableMonitoring = true;
             lockedScreenDuration = 0;
             syslog (LOG_INFO, "Wakeup detected");
         }
-        else
+        else if (enableMonitoring)
         {
             if (screen_locked())
             {
