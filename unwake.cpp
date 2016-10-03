@@ -24,6 +24,12 @@ bool lid_opened()
     return true;
 }
 
+bool screen_locked()
+{
+    int rc = system("ps aux | grep mate-screensaver-dialog | grep -v grep &> /dev/null");
+    return rc == 0;
+}
+
 void sleep_now()
 {
     system("pm-suspend");
@@ -34,7 +40,8 @@ int main()
     openlog ("unwake", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
     syslog (LOG_INFO, "Unwake started");
 
-    unsigned int closedLidDuration = 0;
+    unsigned int lockedScreenDuration = 0;
+    bool enableMonitoring = false;
     time_t oldTime = time(0);
 
     for(;;)
@@ -44,25 +51,27 @@ int main()
         if ((newTime - oldTime) > 2)
         {
             // Wakeup
-            closedLidDuration = 0;
+            enableMonitoring = true;
+            lockedScreenDuration = 0;
             syslog (LOG_INFO, "Wakeup detected");
         }
         else
         {
-            if (lid_opened())
+            if (screen_locked())
             {
-                closedLidDuration = 0;
+                lockedScreenDuration++;
             }
             else
             {
-                closedLidDuration++;
+                lockedScreenDuration = 0;
+                enableMonitoring = false;
             }
         }
         oldTime = newTime;
 
-        if (closedLidDuration > 5)
+        if ((lockedScreenDuration > 10) && enableMonitoring)
         {
-            syslog (LOG_WARNING, "Closed lid detected");
+            syslog (LOG_WARNING, "Locked screen detected");
             sleep_now();
         }
     }
