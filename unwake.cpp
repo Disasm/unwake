@@ -32,7 +32,8 @@ bool screen_locked()
 
 void sleep_now()
 {
-    system("pm-suspend");
+    //system("pm-suspend");
+    system("systemctl suspend -i");
 }
 
 int main()
