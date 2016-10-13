@@ -1,0 +1,9 @@
+[Unit]
+Description=Unwake Service
+
+[Service]
+Type=simple
+ExecStart=/path/to/unwake
+
+[Install]
+WantedBy=default.target
